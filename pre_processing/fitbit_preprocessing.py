@@ -98,6 +98,17 @@ def collect_patient_file_pairs(
     return [(patient_id, sleep_files[patient_id], heart_files[patient_id]) for patient_id in common_ids]
 
 
+def collect_patient_file_pairs_from_lists(
+    sleep_paths: Iterable[str | Path],
+    heart_paths: Iterable[str | Path],
+) -> list[tuple[str, Path, Path]]:
+    sleep_files = {_patient_id_from_path(path): Path(path) for path in sleep_paths}
+    heart_files = {_patient_id_from_path(path): Path(path) for path in heart_paths}
+
+    common_ids = sorted(set(sleep_files).intersection(heart_files))
+    return [(patient_id, sleep_files[patient_id], heart_files[patient_id]) for patient_id in common_ids]
+
+
 def sleep_intervals_to_epoch_labels(
     sleep_df: pd.DataFrame,
     epoch_sec: int = 30,
@@ -324,8 +335,51 @@ def prepare_fitbit_training_data_from_directories(
     normalize_per_window: bool = False,
 ) -> WindowedSleepDataset:
     pairs = collect_patient_file_pairs(sleep_dir=sleep_dir, heart_dir=heart_dir)
+    return prepare_fitbit_training_data_from_pairs(
+        pairs=pairs,
+        window_sec=window_sec,
+        epoch_sec=epoch_sec,
+        sampling_hz=sampling_hz,
+        centered=centered,
+        normalize_per_night=normalize_per_night,
+        normalize_per_window=normalize_per_window,
+    )
+
+
+def prepare_fitbit_training_data_from_file_lists(
+    sleep_paths: Iterable[str | Path],
+    heart_paths: Iterable[str | Path],
+    window_sec: int = 60,
+    epoch_sec: int = 30,
+    sampling_hz: float = 1.0,
+    centered: bool = True,
+    normalize_per_night: bool = False,
+    normalize_per_window: bool = False,
+) -> WindowedSleepDataset:
+    pairs = collect_patient_file_pairs_from_lists(sleep_paths=sleep_paths, heart_paths=heart_paths)
+    return prepare_fitbit_training_data_from_pairs(
+        pairs=pairs,
+        window_sec=window_sec,
+        epoch_sec=epoch_sec,
+        sampling_hz=sampling_hz,
+        centered=centered,
+        normalize_per_night=normalize_per_night,
+        normalize_per_window=normalize_per_window,
+    )
+
+
+def prepare_fitbit_training_data_from_pairs(
+    pairs: Iterable[tuple[str, str | Path, str | Path]],
+    window_sec: int = 60,
+    epoch_sec: int = 30,
+    sampling_hz: float = 1.0,
+    centered: bool = True,
+    normalize_per_night: bool = False,
+    normalize_per_window: bool = False,
+) -> WindowedSleepDataset:
+    pairs = [(patient_id, Path(sleep_path), Path(heart_path)) for patient_id, sleep_path, heart_path in pairs]
     if not pairs:
-        raise ValueError("No matching patient ids were found across sleep_dir and heart_dir")
+        raise ValueError("No matching patient ids were found")
 
     datasets: list[WindowedSleepDataset] = []
     for patient_id, sleep_path, heart_path in pairs:

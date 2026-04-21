@@ -43,6 +43,31 @@ patient_ids = dataset.patient_ids
 print(X.shape, y.shape, patient_ids.shape)
 ```
 
+Explicit sleep and heart-rate files:
+
+```python
+from pre_processing.fitbit_preprocessing import prepare_fitbit_training_data_from_file_lists
+
+sleep_paths = [
+    "/Users/raghvendraomer/Downloads/fitbit/sleep-data/0e615090-ca26-4635-9590-f6e6cde1094f.csv/0e615090-ca26-4635-9590-f6e6cde1094f.csv",
+    "/Users/raghvendraomer/Downloads/fitbit/sleep-data/7607c6de-7244-4ba1-ab7c-5c4c4d7151ad.csv/7607c6de-7244-4ba1-ab7c-5c4c4d7151ad.csv",
+]
+
+heart_paths = [
+    "/Users/raghvendraomer/Downloads/fitbit/heart-rate/0e615090-ca26-4635-9590-f6e6cde1094f.csv.gz",
+    "/Users/raghvendraomer/Downloads/fitbit/heart-rate/7607c6de-7244-4ba1-ab7c-5c4c4d7151ad.csv.gz",
+]
+
+dataset = prepare_fitbit_training_data_from_file_lists(
+    sleep_paths=sleep_paths,
+    heart_paths=heart_paths,
+    window_sec=60,
+    epoch_sec=30,
+    sampling_hz=1.0,
+    centered=True,
+)
+```
+
 To approximate the paper "Deep learning for automated sleep staging using instantaneous heart rate",
 use:
 
