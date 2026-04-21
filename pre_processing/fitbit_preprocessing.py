@@ -28,6 +28,8 @@ class WindowedSleepDataset:
     samples_per_window: int
     sampling_hz: float
     epoch_sec: int
+    window_starts: pd.DatetimeIndex | None = None
+    window_ends: pd.DatetimeIndex | None = None
     patient_ids: np.ndarray | None = None
 
 
@@ -231,6 +233,8 @@ def build_windowed_training_data(
     X_list: list[np.ndarray] = []
     y_list: list[int] = []
     ts_list: list[pd.Timestamp] = []
+    window_start_list: list[pd.Timestamp] = []
+    window_end_list: list[pd.Timestamp] = []
     patient_id_list: list[str] = []
 
     for row in epoch_labels.itertuples(index=False):
@@ -266,6 +270,8 @@ def build_windowed_training_data(
         X_list.append(values)
         y_list.append(stage_to_int[row.level])
         ts_list.append(row.timestamp)
+        window_start_list.append(window_start)
+        window_end_list.append(window_end)
         if patient_id is not None:
             patient_id_list.append(patient_id)
 
@@ -276,6 +282,8 @@ def build_windowed_training_data(
         X=X,
         y=y,
         timestamps=pd.DatetimeIndex(ts_list),
+        window_starts=pd.DatetimeIndex(window_start_list),
+        window_ends=pd.DatetimeIndex(window_end_list),
         stage_names=stage_names,
         samples_per_window=samples_per_window,
         sampling_hz=sampling_hz,
@@ -400,6 +408,8 @@ def prepare_fitbit_training_data_from_pairs(
                 X=dataset.X,
                 y=dataset.y,
                 timestamps=dataset.timestamps,
+                window_starts=dataset.window_starts,
+                window_ends=dataset.window_ends,
                 stage_names=dataset.stage_names,
                 samples_per_window=dataset.samples_per_window,
                 sampling_hz=dataset.sampling_hz,
@@ -414,6 +424,8 @@ def prepare_fitbit_training_data_from_pairs(
             X=np.empty((0, samples_per_window), dtype=np.float32),
             y=np.empty((0,), dtype=np.int64),
             timestamps=pd.DatetimeIndex([]),
+            window_starts=pd.DatetimeIndex([]),
+            window_ends=pd.DatetimeIndex([]),
             stage_names=["wake", "light", "deep", "rem"],
             samples_per_window=samples_per_window,
             sampling_hz=sampling_hz,
@@ -426,6 +438,12 @@ def prepare_fitbit_training_data_from_pairs(
         y=np.concatenate([dataset.y for dataset in datasets], axis=0),
         timestamps=pd.DatetimeIndex(
             np.concatenate([dataset.timestamps.to_numpy() for dataset in datasets], axis=0)
+        ),
+        window_starts=pd.DatetimeIndex(
+            np.concatenate([dataset.window_starts.to_numpy() for dataset in datasets], axis=0)
+        ),
+        window_ends=pd.DatetimeIndex(
+            np.concatenate([dataset.window_ends.to_numpy() for dataset in datasets], axis=0)
         ),
         stage_names=datasets[0].stage_names,
         samples_per_window=datasets[0].samples_per_window,
