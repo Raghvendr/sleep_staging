@@ -9,6 +9,10 @@ The preprocessing utilities in
 convert Fitbit sleep-stage intervals and heart-rate measurements into training
 samples for a sleep staging model.
 
+For a step-by-step walkthrough of the full transformation with worked examples
+and code-line references, see
+[README_preprocess.md](/Users/raghvendraomer/Projects/Sleep_Staging/sleep_staging/README_preprocess.md:1).
+
 At a high level, the pipeline does this:
 
 1. Reads Fitbit sleep-stage files and heart-rate files.
