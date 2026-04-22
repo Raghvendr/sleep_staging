@@ -13,6 +13,10 @@ For a step-by-step walkthrough of the full transformation with worked examples
 and code-line references, see
 [README_preprocess.md](/Users/raghvendraomer/Projects/Sleep_Staging/sleep_staging/README_preprocess.md:1).
 
+For a step-by-step guide to the paper-inspired training pipeline, model,
+nightly sequence construction, loss, and evaluation metrics, see
+[README_training.md](/Users/raghvendraomer/Projects/Sleep_Staging/sleep_staging/README_training.md:1).
+
 At a high level, the pipeline does this:
 
 1. Reads Fitbit sleep-stage files and heart-rate files.
