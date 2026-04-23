@@ -51,6 +51,15 @@ Stage names are mapped as follows:
 - `deep` -> `deep`
 - `rem` -> `rem`
 
+Optional raw Fitbit categories can also be dropped before mapping:
+
+- `asleep`
+- `restless`
+- `awake`
+
+Use `drop_optional_fitbit_levels=True` if you want to remove those rows before
+epoch-label creation.
+
 This means the final label space used by the preprocessing code is:
 
 - `wake`
@@ -191,6 +200,12 @@ Parameters:
 - `path`
   Path to one sleep file. Supports plain `.csv` and compressed `.csv.gz`
   because `pandas.read_csv(..., compression="infer")` is used.
+- `drop_optional_fitbit_levels`
+  If `True`, removes Fitbit raw categories `asleep`, `restless`, and `awake`
+  before stage mapping.
+- `levels_to_drop`
+  Optional explicit iterable of raw sleep levels to remove. If provided, this
+  overrides the default optional-drop list.
 
 Returns:
 
@@ -527,6 +542,11 @@ Parameters:
   Passed to `resample_heart_rate`.
 - `normalize_per_window`
   Passed to `build_windowed_training_data`.
+- `drop_optional_fitbit_levels`
+  Passed to `load_fitbit_sleep_csv`. If `True`, removes `asleep`, `restless`,
+  and `awake` rows before stage mapping.
+- `levels_to_drop`
+  Optional explicit iterable of raw sleep levels to remove before stage mapping.
 
 Returns:
 
@@ -573,6 +593,11 @@ Parameters:
   Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
+- `drop_optional_fitbit_levels`
+  Whether to drop the raw Fitbit levels `asleep`, `restless`, and `awake`
+  before stage mapping.
+- `levels_to_drop`
+  Optional explicit iterable of raw sleep levels to remove before stage mapping.
 
 Returns:
 
@@ -624,6 +649,11 @@ Parameters:
   Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
+- `drop_optional_fitbit_levels`
+  Whether to drop the raw Fitbit levels `asleep`, `restless`, and `awake`
+  before stage mapping.
+- `levels_to_drop`
+  Optional explicit iterable of raw sleep levels to remove before stage mapping.
 
 Returns:
 
@@ -673,6 +703,11 @@ Parameters:
   Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
+- `drop_optional_fitbit_levels`
+  Whether to drop the raw Fitbit levels `asleep`, `restless`, and `awake`
+  before stage mapping.
+- `levels_to_drop`
+  Optional explicit iterable of raw sleep levels to remove before stage mapping.
 
 Returns:
 
@@ -697,6 +732,7 @@ dataset = prepare_fitbit_training_data(
     epoch_sec=30,
     sampling_hz=1.0,
     centered=True,
+    drop_optional_fitbit_levels=True,
 )
 ```
 

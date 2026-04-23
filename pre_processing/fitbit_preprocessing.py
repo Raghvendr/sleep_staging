@@ -18,6 +18,8 @@ FITBIT_STAGE_MAP = {
     "rem": "rem",
 }
 
+FITBIT_OPTIONAL_DROP_LEVELS = ("asleep", "restless", "awake")
+
 
 @dataclass(frozen=True)
 class WindowedSleepDataset:
@@ -33,7 +35,11 @@ class WindowedSleepDataset:
     patient_ids: np.ndarray | None = None
 
 
-def load_fitbit_sleep_csv(path: str | Path) -> pd.DataFrame:
+def load_fitbit_sleep_csv(
+    path: str | Path,
+    drop_optional_fitbit_levels: bool = False,
+    levels_to_drop: Iterable[str] | None = None,
+) -> pd.DataFrame:
     df = pd.read_csv(path, compression="infer").copy()
     required = {"sleepId", "dateTime", "level", "seconds"}
     missing = required.difference(df.columns)
@@ -42,7 +48,14 @@ def load_fitbit_sleep_csv(path: str | Path) -> pd.DataFrame:
 
     df["dateTime"] = pd.to_datetime(df["dateTime"])
     df["seconds"] = df["seconds"].astype(int)
-    df["level"] = df["level"].astype(str).str.lower().map(FITBIT_STAGE_MAP)
+    df["level"] = df["level"].astype(str).str.lower()
+    if levels_to_drop is None:
+        levels_to_drop = FITBIT_OPTIONAL_DROP_LEVELS if drop_optional_fitbit_levels else ()
+    levels_to_drop = {str(level).lower() for level in levels_to_drop}
+    if levels_to_drop:
+        df = df.loc[~df["level"].isin(levels_to_drop)].copy()
+
+    df["level"] = df["level"].map(FITBIT_STAGE_MAP)
     df = df.dropna(subset=["level"]).sort_values(["sleepId", "dateTime"]).reset_index(drop=True)
     df["endTime"] = df["dateTime"] + pd.to_timedelta(df["seconds"], unit="s")
     return df
@@ -303,9 +316,15 @@ def prepare_fitbit_training_data(
     normalize_per_night: bool = False,
     normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
+    drop_optional_fitbit_levels: bool = False,
+    levels_to_drop: Iterable[str] | None = None,
 ) -> WindowedSleepDataset:
     patient_id = _patient_id_from_path(sleep_path)
-    sleep_df = load_fitbit_sleep_csv(sleep_path)
+    sleep_df = load_fitbit_sleep_csv(
+        sleep_path,
+        drop_optional_fitbit_levels=drop_optional_fitbit_levels,
+        levels_to_drop=levels_to_drop,
+    )
     heart_df = load_fitbit_heart_rate_csv(heart_path)
     epoch_labels = sleep_intervals_to_epoch_labels(sleep_df, epoch_sec=epoch_sec)
 
@@ -345,6 +364,8 @@ def prepare_fitbit_training_data_from_directories(
     normalize_per_night: bool = False,
     normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
+    drop_optional_fitbit_levels: bool = False,
+    levels_to_drop: Iterable[str] | None = None,
 ) -> WindowedSleepDataset:
     pairs = collect_patient_file_pairs(sleep_dir=sleep_dir, heart_dir=heart_dir)
     return prepare_fitbit_training_data_from_pairs(
@@ -356,6 +377,8 @@ def prepare_fitbit_training_data_from_directories(
         normalize_per_night=normalize_per_night,
         normalize_per_sleep_id=normalize_per_sleep_id,
         normalize_per_window=normalize_per_window,
+        drop_optional_fitbit_levels=drop_optional_fitbit_levels,
+        levels_to_drop=levels_to_drop,
     )
 
 
@@ -369,6 +392,8 @@ def prepare_fitbit_training_data_from_file_lists(
     normalize_per_night: bool = False,
     normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
+    drop_optional_fitbit_levels: bool = False,
+    levels_to_drop: Iterable[str] | None = None,
 ) -> WindowedSleepDataset:
     pairs = collect_patient_file_pairs_from_lists(sleep_paths=sleep_paths, heart_paths=heart_paths)
     return prepare_fitbit_training_data_from_pairs(
@@ -380,6 +405,8 @@ def prepare_fitbit_training_data_from_file_lists(
         normalize_per_night=normalize_per_night,
         normalize_per_sleep_id=normalize_per_sleep_id,
         normalize_per_window=normalize_per_window,
+        drop_optional_fitbit_levels=drop_optional_fitbit_levels,
+        levels_to_drop=levels_to_drop,
     )
 
 
@@ -392,6 +419,8 @@ def prepare_fitbit_training_data_from_pairs(
     normalize_per_night: bool = False,
     normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
+    drop_optional_fitbit_levels: bool = False,
+    levels_to_drop: Iterable[str] | None = None,
 ) -> WindowedSleepDataset:
     pairs = [(patient_id, Path(sleep_path), Path(heart_path)) for patient_id, sleep_path, heart_path in pairs]
     if not pairs:
@@ -409,6 +438,8 @@ def prepare_fitbit_training_data_from_pairs(
             normalize_per_night=normalize_per_night,
             normalize_per_sleep_id=normalize_per_sleep_id,
             normalize_per_window=normalize_per_window,
+            drop_optional_fitbit_levels=drop_optional_fitbit_levels,
+            levels_to_drop=levels_to_drop,
         )
         if dataset.X.shape[0] == 0:
             continue

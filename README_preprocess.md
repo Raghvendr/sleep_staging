@@ -53,6 +53,7 @@ What it does:
 - checks required columns
 - converts `dateTime` to pandas datetime
 - converts `seconds` to integer
+- optionally drops raw Fitbit categories like `asleep`, `restless`, and `awake`
 - maps Fitbit stage names into the internal label set
 - adds `endTime = dateTime + seconds`
 
@@ -67,6 +68,24 @@ df["endTime"] = df["dateTime"] + pd.to_timedelta(df["seconds"], unit="s")
 
 Code reference:
 [fitbit_preprocessing.py](/Users/raghvendraomer/Projects/Sleep_Staging/sleep_staging/pre_processing/fitbit_preprocessing.py:43)
+
+If you want to remove those optional Fitbit categories before stage mapping,
+call:
+
+```python
+sleep_df = load_fitbit_sleep_csv(
+    sleep_path,
+    drop_optional_fitbit_levels=True,
+)
+```
+
+By default, this drops:
+
+- `asleep`
+- `restless`
+- `awake`
+
+You can also provide a custom list through `levels_to_drop`.
 
 ### Example
 
@@ -93,6 +112,17 @@ This means:
 - `light` from `23:20:00` to `23:21:29`
 - `deep` from `23:21:30` to `23:22:29`
 - `rem` from `23:22:30` to `23:22:59`
+
+If the raw data instead contains:
+
+```text
+53,2018-05-25 02:52:00,awake,120
+53,2018-05-25 02:54:00,asleep,5760
+53,2018-05-25 04:30:00,restless,60
+```
+
+and you use `drop_optional_fitbit_levels=True`, then all three of those rows
+are removed before the stage mapping step.
 
 ## Step 2: Load And Standardize Heart-Rate Data
 
