@@ -172,6 +172,7 @@ def resample_heart_rate(
     sampling_hz: float = 1.0,
     interpolation: str = "linear",
     normalize_per_night: bool = False,
+    normalize_per_sleep_id: bool = False,
     segments: Iterable[tuple[pd.Timestamp, pd.Timestamp]] | None = None,
 ) -> pd.DataFrame:
     freq = pd.to_timedelta(1 / sampling_hz, unit="s")
@@ -183,7 +184,7 @@ def resample_heart_rate(
     resampled["heart_rate"] = resampled["heart_rate"].interpolate(method=interpolation, limit_direction="both")
     resampled = resampled.reset_index()
 
-    if normalize_per_night and segments is not None:
+    if (normalize_per_night or normalize_per_sleep_id) and segments is not None:
         normalized_parts: list[pd.DataFrame] = []
         for start, end in segments:
             part = resampled[(resampled["timestamp"] >= start) & (resampled["timestamp"] < end)].copy()
@@ -300,6 +301,7 @@ def prepare_fitbit_training_data(
     sampling_hz: float = 1.0,
     centered: bool = True,
     normalize_per_night: bool = False,
+    normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
 ) -> WindowedSleepDataset:
     patient_id = _patient_id_from_path(sleep_path)
@@ -317,6 +319,7 @@ def prepare_fitbit_training_data(
         heart_df,
         sampling_hz=sampling_hz,
         normalize_per_night=normalize_per_night,
+        normalize_per_sleep_id=normalize_per_sleep_id,
         segments=segments,
     )
 
@@ -340,6 +343,7 @@ def prepare_fitbit_training_data_from_directories(
     sampling_hz: float = 1.0,
     centered: bool = True,
     normalize_per_night: bool = False,
+    normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
 ) -> WindowedSleepDataset:
     pairs = collect_patient_file_pairs(sleep_dir=sleep_dir, heart_dir=heart_dir)
@@ -350,6 +354,7 @@ def prepare_fitbit_training_data_from_directories(
         sampling_hz=sampling_hz,
         centered=centered,
         normalize_per_night=normalize_per_night,
+        normalize_per_sleep_id=normalize_per_sleep_id,
         normalize_per_window=normalize_per_window,
     )
 
@@ -362,6 +367,7 @@ def prepare_fitbit_training_data_from_file_lists(
     sampling_hz: float = 1.0,
     centered: bool = True,
     normalize_per_night: bool = False,
+    normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
 ) -> WindowedSleepDataset:
     pairs = collect_patient_file_pairs_from_lists(sleep_paths=sleep_paths, heart_paths=heart_paths)
@@ -372,6 +378,7 @@ def prepare_fitbit_training_data_from_file_lists(
         sampling_hz=sampling_hz,
         centered=centered,
         normalize_per_night=normalize_per_night,
+        normalize_per_sleep_id=normalize_per_sleep_id,
         normalize_per_window=normalize_per_window,
     )
 
@@ -383,6 +390,7 @@ def prepare_fitbit_training_data_from_pairs(
     sampling_hz: float = 1.0,
     centered: bool = True,
     normalize_per_night: bool = False,
+    normalize_per_sleep_id: bool = False,
     normalize_per_window: bool = False,
 ) -> WindowedSleepDataset:
     pairs = [(patient_id, Path(sleep_path), Path(heart_path)) for patient_id, sleep_path, heart_path in pairs]
@@ -399,6 +407,7 @@ def prepare_fitbit_training_data_from_pairs(
             sampling_hz=sampling_hz,
             centered=centered,
             normalize_per_night=normalize_per_night,
+            normalize_per_sleep_id=normalize_per_sleep_id,
             normalize_per_window=normalize_per_window,
         )
         if dataset.X.shape[0] == 0:

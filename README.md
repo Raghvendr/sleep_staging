@@ -375,9 +375,16 @@ Parameters:
   Options:
   - `False`: keep heart rate on its original scale
   - `True`: normalize each night independently
+- `normalize_per_sleep_id`
+  Whether to z-score normalize heart rate separately for each `sleepId`
+  segment from the sleep file.
+  Options:
+  - `False`: do not explicitly normalize by `sleepId`
+  - `True`: normalize heart rate independently within each `sleepId`
 - `segments`
   Iterable of `(start, end)` timestamps defining sleep segments.
-  This is only used when `normalize_per_night=True`.
+  This is only used when `normalize_per_night=True` or
+  `normalize_per_sleep_id=True`.
 
 Returns:
 
@@ -516,6 +523,8 @@ Parameters:
   Passed to `build_windowed_training_data`.
 - `normalize_per_night`
   Passed to `resample_heart_rate`.
+- `normalize_per_sleep_id`
+  Passed to `resample_heart_rate`.
 - `normalize_per_window`
   Passed to `build_windowed_training_data`.
 
@@ -560,6 +569,8 @@ Parameters:
   Whether windows are centered or trailing.
 - `normalize_per_night`
   Whether to normalize heart rate separately for each night.
+- `normalize_per_sleep_id`
+  Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
 
@@ -609,6 +620,8 @@ Parameters:
   Whether windows are centered or trailing.
 - `normalize_per_night`
   Whether to normalize heart rate separately for each night.
+- `normalize_per_sleep_id`
+  Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
 
@@ -656,6 +669,8 @@ Parameters:
   Whether windows are centered or trailing.
 - `normalize_per_night`
   Whether to normalize heart rate separately for each night.
+- `normalize_per_sleep_id`
+  Whether to normalize heart rate separately for each `sleepId`.
 - `normalize_per_window`
   Whether to normalize each extracted window independently.
 

@@ -288,10 +288,10 @@ After resampling to 1 second and interpolating, it becomes conceptually:
 
 Now heart rate exists on a regular timeline, which makes window slicing easy.
 
-### Per-Night Normalization
+### Per-Night And Per-`sleepId` Normalization
 
-If `normalize_per_night=True`, the function normalizes heart rate separately
-within each sleep segment:
+If `normalize_per_night=True` or `normalize_per_sleep_id=True`, the function
+normalizes heart rate separately within each segment:
 
 ```python
 part["heart_rate"] = (part["heart_rate"] - part["heart_rate"].mean()) / std
@@ -300,7 +300,20 @@ part["heart_rate"] = (part["heart_rate"] - part["heart_rate"].mean()) / std
 Code reference:
 [fitbit_preprocessing.py](/Users/raghvendraomer/Projects/Sleep_Staging/sleep_staging/pre_processing/fitbit_preprocessing.py:196)
 
-This is the closest match to the paper’s nightly normalization.
+For the current Fitbit preprocessing code, those segments are built from:
+
+```python
+sleep_df.groupby("sleepId")["dateTime"].min()
+sleep_df.groupby("sleepId")["endTime"].max()
+```
+
+So `normalize_per_sleep_id=True` is the explicit way to say:
+
+- normalize heart rate independently for each `sleepId`
+
+In practice, `normalize_per_night=True` and `normalize_per_sleep_id=True`
+currently use the same segment boundaries for Fitbit files, because the code
+uses `sleepId` start and end times to define each sleep segment.
 
 ## Step 5: Align Sleep Labels With Heart-Rate Windows
 
